@@ -9,37 +9,37 @@
 module cover_art::cover_art_tests;
 
 use cover_art::cover_art;
-use ori::walrus_data;
+use ori::{confidentiality, data};
 
 #[test]
 fun new_still_only() {
-    let art = cover_art::new(walrus_data::new_blob(1), option::none());
+    let art = cover_art::new(
+        data::new_blob(1, confidentiality::new_unencrypted()),
+        option::none(),
+    );
     assert!(art.still().blob_id() == 1);
     assert!(art.animated().is_none());
 }
 
 #[test]
 fun new_with_animation() {
-    let art = cover_art::new(walrus_data::new_blob(1), option::some(walrus_data::new_blob(2)));
+    let art = cover_art::new(
+        data::new_blob(1, confidentiality::new_unencrypted()),
+        option::some(data::new_blob(2, confidentiality::new_unencrypted())),
+    );
     assert!(art.still().blob_id() == 1);
     assert!(art.animated().is_some());
     assert!(art.animated().borrow().blob_id() == 2);
 }
 
-// `new` requires the still image to be a Walrus blob; a quilt patch is rejected
-// by `assert_is_blob`, which aborts in `ori::walrus_data`.
-#[test, expected_failure(abort_code = 0, location = ori::walrus_data)] // ENotBlob
-fun new_rejects_non_blob_still() {
-    cover_art::new(walrus_data::new_quilt_patch(1, 0, 0, 1), option::none());
-}
-
-// The optional animated reference is checked with the same rule as the still
-// image: a quilt patch in the `animated` slot is rejected too, not just a
-// non-blob still.
-#[test, expected_failure(abort_code = 0, location = ori::walrus_data)] // ENotBlob
-fun new_rejects_non_blob_animated() {
-    cover_art::new(
-        walrus_data::new_blob(1),
-        option::some(walrus_data::new_quilt_patch(2, 0, 0, 1)),
+#[test]
+fun new_preserves_encrypted_confidentiality() {
+    let sealed_dek = vector[1, 2, 3];
+    let art = cover_art::new(
+        data::new_blob(1, confidentiality::new_encrypted(sealed_dek)),
+        option::none(),
     );
+    let confidentiality = art.still().blob_confidentiality();
+    assert!(confidentiality.is_encrypted());
+    assert!(*confidentiality.sealed_dek() == sealed_dek);
 }
