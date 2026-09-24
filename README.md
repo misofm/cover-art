@@ -14,7 +14,7 @@
 
 ## Dependencies
 
-- **`ori`** — `WalrusBlob` references and their confidentiality metadata for off-chain cover-image storage.
+- **`ori`** — `WalrusBlob` references for off-chain cover-image storage. Cover art is always public: `new` aborts with `EEncryptedBlob` (0) if either blob is encrypted.
 
 ## Build & test
 

@@ -48,3 +48,11 @@ None.
 - `sui move test` passes 2/2 tests covering still-only and animated
   construction. Incompatible Walrus reference shapes are rejected by the Move
   type checker rather than runtime tests.
+
+## 2026-09-24 — cover art must be unencrypted
+
+`new` now asserts that the still blob and any animated blob are
+`Unencrypted`, aborting with `EEncryptedBlob` (0) otherwise, so cover art
+stored through this type is always public. The `ori` dependency and the
+`CoverArt` layout are unchanged. `sui move test` passes 4/4 (sui 1.79.0),
+including rejection of an encrypted still and an encrypted animation.

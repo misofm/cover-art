@@ -7,9 +7,15 @@
 /// Keeping it in an extension rather than immutable core means a new format is a
 /// republish of this small package (or a brand-new cover art standard), not of the
 /// frozen protocol. `CoverArt` references external storage via `ori::data::WalrusBlob`.
+/// Cover art is always public: `new` rejects encrypted blobs.
 module cover_art::cover_art;
 
 use ori::data::WalrusBlob;
+
+// === Errors ===
+
+/// A cover art blob is encrypted; cover art must be public.
+const EEncryptedBlob: u64 = 0;
 
 // === Structs ===
 
@@ -22,7 +28,10 @@ public struct CoverArt has copy, drop, store {
 // === Public Functions ===
 
 /// Creates cover art with a still image and optional animated version.
+/// Aborts with `EEncryptedBlob` if either blob is encrypted.
 public fun new(still: WalrusBlob, animated: Option<WalrusBlob>): CoverArt {
+    assert!(!still.blob_confidentiality().is_encrypted(), EEncryptedBlob);
+    animated.do_ref!(|blob| assert!(!blob.blob_confidentiality().is_encrypted(), EEncryptedBlob));
     CoverArt { still, animated }
 }
 

@@ -39,17 +39,18 @@ fun new_with_animation() {
     assert!(event::num_events() == events_before);
 }
 
-#[test]
-fun new_preserves_encrypted_confidentiality() {
-    let sealed_dek = vector[1, 2, 3];
-    let events_before = event::num_events();
-    let art = cover_art::new(
-        data::new_blob(1, confidentiality::new_encrypted(sealed_dek)),
+#[test, expected_failure(abort_code = cover_art::EEncryptedBlob)]
+fun new_rejects_encrypted_still() {
+    cover_art::new(
+        data::new_blob(1, confidentiality::new_encrypted(vector[1, 2, 3])),
         option::none(),
     );
-    assert!(event::num_events() == events_before);
-    let confidentiality = art.still().blob_confidentiality();
-    assert!(confidentiality.is_encrypted());
-    assert!(*confidentiality.sealed_dek() == sealed_dek);
-    assert!(event::num_events() == events_before);
+}
+
+#[test, expected_failure(abort_code = cover_art::EEncryptedBlob)]
+fun new_rejects_encrypted_animation() {
+    cover_art::new(
+        data::new_blob(1, confidentiality::new_unencrypted()),
+        option::some(data::new_blob(2, confidentiality::new_encrypted(vector[1, 2, 3]))),
+    );
 }
