@@ -2,7 +2,7 @@
 name = "cover_art"
 edition = "2024"
 license = "Apache 2.0"
-authors = ["Miso Labs, Inc. (build@miso.network)"]
+authors = ["Miso Labs, Inc. (build@miso.fm)"]
 
 # The evolvable `CoverArt` value type: a still image plus an optional animation,
 # each a standalone external (Walrus) blob reference via `ori::data::WalrusBlob`. A
