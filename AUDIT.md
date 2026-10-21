@@ -1,55 +1,39 @@
 # Security Audit — `cover_art`
 
-**Revision:** working tree based on `a40df38e96d221a12f42ebbbd446a5d23215a166`. Sole dependency
-pin: `ori` @ `367ed5fe92a8b62da02c1116537cf08d111e0789` (`Move.toml`).
-**Date:** 2026-09-02 · **Toolchain:** sui 1.78.1-722ac4fcf484
-
-Audit of `cover_art` (55 LOC, `sources/cover_art.move`), the `CoverArt` value
-type consumed by the `release_cover_art` extension. Verdict: **safe to publish
-— no findings.**
+Audited at `2065cb49bbd896ec308b211b2a4c9891bb26ba2f` (2026-10-21). Scope: package `cover_art`, module `cover_art::cover_art` (`sources/cover_art.move`), and the parts of its dependency `ori` @ `367ed5fe` that it relies on (`ori::data`, `ori::confidentiality`).
 
 ## What it does
 
-`CoverArt` is a pure value struct (`copy, drop, store`): a required
-`still: WalrusBlob` plus an optional `animated: Option<WalrusBlob>`, both
-references to external Walrus storage. The field types make the standalone-blob
-constraint compile-time explicit, and two getters expose read-only borrows.
-`new` aborts with `EEncryptedBlob` (0) if the still or the animated blob is
-encrypted, so cover art stored through this type is always public.
+A `copy`/`drop`/`store` value type: a required still `WalrusBlob` plus an optional animated `WalrusBlob`, both unencrypted. `release_cover_art` stores it. See [README](./README.md).
 
-## Threat model
+## Trust model
 
-A malicious release admin attaching malformed cover references; a third party
-forging or mutating another release's art.
-
-- **Forgery/mutation of stored art:** impossible here by design — this package
-  holds no state and attaches to nothing. Storage and authorization live in the
-  consuming extension (`release_cover_art`), audited separately; it gates every
-  write through `Release.uid_mut(cap)`.
-- **Malformed references:** the field types accept only `WalrusBlob`. Whether
-  the blob *exists* or *is an image* is explicitly out of scope (client-side
-  convention).
-- **Value-type escape hatches:** `CoverArt` has `copy`, so anyone holding one
-  can duplicate it — harmless for an immutable-reference payload; there is no
-  capability or identity inside it. Fields are private and there are no
-  mutators, so a constructed `CoverArt` can never be altered after `new`.
+- No state, objects, capabilities, events or dynamic fields.
+- **Anyone** may build a `CoverArt` from any unencrypted `WalrusBlob` values (`cover_art.move:26-32`).
+- **Nobody** can change a `CoverArt` after `new`: its fields are private and there are no mutators (`cover_art.move:19-22`).
+- Where cover art is stored, and who may set it, is decided by the consumer. `release_cover_art` gates every write with `ReleaseAdminCap`.
 
 ## Findings
 
-None.
+**CA-1 · Info · Accepted — "always public" means declared unencrypted, not verified.** The check (`cover_art.move:27-30`) reads the `Confidentiality` tag the caller supplied. `ori::confidentiality::new_unencrypted()` is public and unconditional, so any blob, including ciphertext, can be tagged unencrypted. The contract guarantees only that no sealed key is stored with the cover. Whether a blob exists, is public, or is an image is left to clients.
 
-## Edge cases verified
+**CA-2 · Info · Accepted — blob ids are not validated.** `blob_id` 0, `u256::MAX`, and the same blob used for both still and animation are all accepted (probes). Walrus existence cannot be checked on-chain.
 
-- `animated: none` accepted (`new_still_only`).
-- An encrypted still or animation aborts with `EEncryptedBlob`
-  (`new_rejects_encrypted_still`, `new_rejects_encrypted_animation`).
-- `#[test_only] new_for_testing` constructs an unencrypted `WalrusBlob` and is
-  absent from published bytecode.
+## Checked, no finding
+
+- An encrypted still, an encrypted animation, or both all abort `EEncryptedBlob` (`cover_art.move:27`, `29`; unit tests plus a probe). The only way to build an encrypted value is `confidentiality::new_encrypted`, which requires a non-empty sealed key, and `is_encrypted` matches exhaustively over both variants (`ori` `confidentiality.move`).
+- `WalrusBlob` and `Confidentiality` have `copy, drop, store` and no identity, so copying a `CoverArt` duplicates no authority (probe `copy_equal`).
+- `new_for_testing` is `#[test_only]` and does not exist in published bytecode (`cover_art.move:46-52`).
+- `new` emits no events (tests). Events are the consumer's job: `release_cover_art` emits the blob ids.
+- Size is fixed: two `u256` ids plus the confidentiality tags. An unencrypted tag carries no payload, so a stored `CoverArt` is constant-size.
+
+## Operational requirements
+
+- `Published.toml` records mainnet and testnet publications from 2026-09-17, which predate the `EEncryptedBlob` check. The deployed bytecode accepts encrypted blobs. The current source must be published fresh, and consumers must pin it.
+- `ori` is pinned by git rev, and its `Published.toml` records mainnet `0xadefbe1a…`. Publishing must link against that address, not republish `ori`.
 
 ## Verification
 
-- `sui move build` passes.
-- `sui move test` passes 4/4 tests covering still-only and animated
-  construction and rejection of encrypted blobs; 100% coverage. Incompatible
-  Walrus reference shapes are rejected by the Move type checker rather than
-  runtime tests.
+- `sui move test --coverage`: 4/4 pass. `sui move coverage summary`: 100.00% (`cover_art`).
+- `sui move build -e mainnet --warnings-are-errors` and `-e testnet`: both succeed with no warnings (sui 1.82.1).
+- 5 throwaway probe tests (zero and max blob id, a shared blob, copy semantics, both blobs encrypted) all passed. They were not committed.
