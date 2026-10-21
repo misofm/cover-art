@@ -2,24 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /// The evolvable cover art value used by the recording/release cover art extensions.
-///
-/// CoverArt format changes over time (static-only → +animated → future formats).
-/// Keeping it in an extension rather than immutable core means a new format is a
-/// republish of this small package (or a brand-new cover art standard), not of the
-/// frozen protocol. `CoverArt` references external storage via `ori::data::WalrusBlob`.
-/// Cover art is always public: `new` rejects encrypted blobs.
+/// It lives outside the frozen protocol so a new format is a republish of this
+/// small package. Cover art is always public: `new` rejects encrypted blobs.
 module cover_art::cover_art;
 
 use ori::data::WalrusBlob;
 
 // === Errors ===
 
-/// A cover art blob is encrypted; cover art must be public.
 const EEncryptedBlob: u64 = 0;
 
 // === Structs ===
 
-/// CoverArt with a required still image and optional animation.
 public struct CoverArt has copy, drop, store {
     still: WalrusBlob,
     animated: Option<WalrusBlob>,
@@ -27,8 +21,6 @@ public struct CoverArt has copy, drop, store {
 
 // === Public Functions ===
 
-/// Creates cover art with a still image and optional animated version.
-/// Aborts with `EEncryptedBlob` if either blob is encrypted.
 public fun new(still: WalrusBlob, animated: Option<WalrusBlob>): CoverArt {
     assert!(!still.blob_confidentiality().is_encrypted(), EEncryptedBlob);
     animated.do_ref!(|blob| assert!(!blob.blob_confidentiality().is_encrypted(), EEncryptedBlob));
@@ -37,12 +29,10 @@ public fun new(still: WalrusBlob, animated: Option<WalrusBlob>): CoverArt {
 
 // === View Functions ===
 
-/// Returns a reference to the still image data.
 public fun still(self: &CoverArt): &WalrusBlob {
     &self.still
 }
 
-/// Returns a reference to the optional animated cover art data.
 public fun animated(self: &CoverArt): &Option<WalrusBlob> {
     &self.animated
 }

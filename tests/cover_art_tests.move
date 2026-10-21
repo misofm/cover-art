@@ -1,10 +1,8 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: Apache-2.0
 
-/// `CoverArt` is a pure `copy, drop, store` value (no `key`/`UID`, no `ctx`
-/// parameter anywhere in the module): there is no ownership, no shared
-/// object, and no sender-gated behavior for `test_scenario` to exercise.
-/// Plain single-transaction unit tests cover the full use-case scope.
+/// `CoverArt` is a plain `copy, drop, store` value with no `ctx` anywhere in the
+/// module, so single-transaction unit tests cover it without `test_scenario`.
 #[test_only]
 module cover_art::cover_art_tests;
 
