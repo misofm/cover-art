@@ -6,9 +6,10 @@
 #[test_only]
 module cover_art::cover_art_tests;
 
-use cover_art::cover_art;
-use ori::{confidentiality, data};
+use std::unit_test::assert_eq;
 use sui::event;
+use ori::{confidentiality, data};
+use cover_art::cover_art;
 
 #[test]
 fun new_still_only() {
@@ -17,10 +18,10 @@ fun new_still_only() {
         data::new_blob(1, confidentiality::new_unencrypted()),
         option::none(),
     );
-    assert!(event::num_events() == events_before);
-    assert!(art.still().blob_id() == 1);
+    assert_eq!(event::num_events(), events_before);
+    assert_eq!(art.still().blob_id(), 1);
     assert!(art.animated().is_none());
-    assert!(event::num_events() == events_before);
+    assert_eq!(event::num_events(), events_before);
 }
 
 #[test]
@@ -30,11 +31,11 @@ fun new_with_animation() {
         data::new_blob(1, confidentiality::new_unencrypted()),
         option::some(data::new_blob(2, confidentiality::new_unencrypted())),
     );
-    assert!(event::num_events() == events_before);
-    assert!(art.still().blob_id() == 1);
+    assert_eq!(event::num_events(), events_before);
+    assert_eq!(art.still().blob_id(), 1);
     assert!(art.animated().is_some());
-    assert!(art.animated().borrow().blob_id() == 2);
-    assert!(event::num_events() == events_before);
+    assert_eq!(art.animated().borrow().blob_id(), 2);
+    assert_eq!(event::num_events(), events_before);
 }
 
 #[test, expected_failure(abort_code = cover_art::EEncryptedBlob)]

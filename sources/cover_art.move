@@ -6,7 +6,12 @@
 /// small package. Cover art is always public: `new` rejects encrypted blobs.
 module cover_art::cover_art;
 
+// === Imports ===
+
 use ori::data::WalrusBlob;
+
+#[test_only]
+use ori::{confidentiality, data};
 
 // === Errors ===
 
@@ -23,7 +28,9 @@ public struct CoverArt has copy, drop, store {
 
 public fun new(still: WalrusBlob, animated: Option<WalrusBlob>): CoverArt {
     assert!(!still.blob_confidentiality().is_encrypted(), EEncryptedBlob);
-    animated.do_ref!(|blob| assert!(!blob.blob_confidentiality().is_encrypted(), EEncryptedBlob));
+    animated.do_ref!(|blob| {
+        assert!(!blob.blob_confidentiality().is_encrypted(), EEncryptedBlob)
+    });
     CoverArt { still, animated }
 }
 
@@ -41,7 +48,6 @@ public fun animated(self: &CoverArt): &Option<WalrusBlob> {
 
 #[test_only]
 public fun new_for_testing(): CoverArt {
-    use ori::{confidentiality, data};
     CoverArt {
         still: data::new_blob(0, confidentiality::new_unencrypted()),
         animated: option::none(),

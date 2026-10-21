@@ -4,7 +4,7 @@
 pin: `ori` @ `367ed5fe92a8b62da02c1116537cf08d111e0789` (`Move.toml`).
 **Date:** 2026-09-02 · **Toolchain:** sui 1.78.1-722ac4fcf484
 
-Audit of `cover_art` (52 LOC, `sources/cover_art.move`), the `CoverArt` value
+Audit of `cover_art` (55 LOC, `sources/cover_art.move`), the `CoverArt` value
 type consumed by the `release_cover_art` extension. Verdict: **safe to publish
 — no findings.**
 
@@ -14,6 +14,8 @@ type consumed by the `release_cover_art` extension. Verdict: **safe to publish
 `still: WalrusBlob` plus an optional `animated: Option<WalrusBlob>`, both
 references to external Walrus storage. The field types make the standalone-blob
 constraint compile-time explicit, and two getters expose read-only borrows.
+`new` aborts with `EEncryptedBlob` (0) if the still or the animated blob is
+encrypted, so cover art stored through this type is always public.
 
 ## Threat model
 
@@ -39,20 +41,15 @@ None.
 ## Edge cases verified
 
 - `animated: none` accepted (`new_still_only`).
+- An encrypted still or animation aborts with `EEncryptedBlob`
+  (`new_rejects_encrypted_still`, `new_rejects_encrypted_animation`).
 - `#[test_only] new_for_testing` constructs an unencrypted `WalrusBlob` and is
   absent from published bytecode.
 
 ## Verification
 
 - `sui move build` passes.
-- `sui move test` passes 2/2 tests covering still-only and animated
-  construction. Incompatible Walrus reference shapes are rejected by the Move
-  type checker rather than runtime tests.
-
-## 2026-09-24 — cover art must be unencrypted
-
-`new` now asserts that the still blob and any animated blob are
-`Unencrypted`, aborting with `EEncryptedBlob` (0) otherwise, so cover art
-stored through this type is always public. The `ori` dependency and the
-`CoverArt` layout are unchanged. `sui move test` passes 4/4 (sui 1.79.0),
-including rejection of an encrypted still and an encrypted animation.
+- `sui move test` passes 4/4 tests covering still-only and animated
+  construction and rejection of encrypted blobs; 100% coverage. Incompatible
+  Walrus reference shapes are rejected by the Move type checker rather than
+  runtime tests.
