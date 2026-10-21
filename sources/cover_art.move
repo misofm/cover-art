@@ -1,9 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// The evolvable cover art value used by the recording/release cover art extensions.
-/// It lives outside the frozen protocol so a new format is a republish of this
-/// small package. Cover art is always public: `new` rejects encrypted blobs.
 module cover_art::cover_art;
 
 // === Imports ===

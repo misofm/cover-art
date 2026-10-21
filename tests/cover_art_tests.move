@@ -1,8 +1,6 @@
 // Copyright (c) Miso Labs, Inc.
 // SPDX-License-Identifier: FSL-1.1-ALv2
 
-/// `CoverArt` is a plain `copy, drop, store` value with no `ctx` anywhere in the
-/// module, so single-transaction unit tests cover it without `test_scenario`.
 #[test_only]
 module cover_art::cover_art_tests;
 
