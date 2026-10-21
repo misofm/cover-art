@@ -1,7 +1,7 @@
 [package]
 name = "cover_art"
 edition = "2024"
-license = "Apache 2.0"
+license = "FSL-1.1-ALv2"
 authors = ["Miso Labs, Inc. (build@miso.fm)"]
 
 # The evolvable `CoverArt` value type: a still image plus an optional animation,

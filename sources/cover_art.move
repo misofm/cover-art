@@ -1,5 +1,5 @@
 // Copyright (c) Miso Labs, Inc.
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: FSL-1.1-ALv2
 
 /// The evolvable cover art value used by the recording/release cover art extensions.
 /// It lives outside the frozen protocol so a new format is a republish of this
