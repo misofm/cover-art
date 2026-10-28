@@ -1,3 +1,5 @@
+> **Moved.** This repository is archived. Its packages now live in [`misofm/framework`](https://github.com/misofm/framework/tree/main/lib/cover_art) under `lib/cover_art/`.
+
 # `cover_art`
 
 > The evolvable `CoverArt` value type: a still image plus an optional animation, each a reference to external (Walrus) storage. The shared primitive behind release cover-art metadata.
