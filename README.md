@@ -1,4 +1,4 @@
-> **Moved.** This repository is archived. Its packages now live in [`misofm/framework`](https://github.com/misofm/framework/tree/main/lib/cover_art) under `lib/cover_art/`.
+> **Moved.** This repository is archived. Its package now lives in [`misofm/framework`](https://github.com/misofm/framework/tree/main/cover_art) under `cover_art/`.
 
 # `cover_art`
 
